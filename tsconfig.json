@@ -1,0 +1,13 @@
+{
+  "extends": "@tsconfig/node18-strictest-esm/tsconfig.json",
+  "include": ["src/", "test/"],
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "outDir": "./build",
+    "sourceMap": true,
+    // "esModuleInterop": true,
+    // "declaration": true,
+    "moduleResolution": "node"
+  }
+}
