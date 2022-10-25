@@ -11,11 +11,7 @@ const codeString = `function test() {
 test();
 `;
 
-import {
-  assertCallExpression,
-  assertIdentifier,
-  assertVariableDeclaration,
-} from "@babel/types";
+import { assertIdentifier, assertVariableDeclaration } from "@babel/types";
 import { Babeliser } from "babeliser";
 import { NodeBug } from "../src/index.js";
 
@@ -35,18 +31,17 @@ assertIs<number>(end, "number");
 const nodeBug = new NodeBug(codeString);
 nodeBug.attachDebugger(end, "exec('a')");
 
-const { start: spyStart } = babelisedCode
-  .getExpressionStatements()
-  .find((e) => {
-    const expression = e.expression;
-    assertCallExpression(expression);
-    assertIdentifier(expression.callee);
-    return expression.callee.name === "somethingToSpyOn";
-  })!;
-nodeBug.defineSpy(
-  spyStart!,
-  "let mySpy = null; const somethingToSpyOn = (...args) => mySpy = args;"
-);
+// const { start: spyStart } = babelisedCode
+//   .getExpressionStatements()
+//   .find((e) => {
+//     const expression = e.expression;
+//     // @ts-ignore Assert is later
+//     return expression?.callee?.name === "somethingToSpyOn";
+//   })!;
+// nodeBug.defineSpy(
+//   spyStart!,
+//   "let mySpy = null; const somethingToSpyOn = (...args) => mySpy = args;"
+// );
 // Alternative
 // nodeBug.defineSpy(spyStart! - 1, {name: "mySpy", polyfill: "let mySpy = null; const somethingToSpyOn = (...args) => mySpy = args;"});
 const res = await nodeBug.inspect();

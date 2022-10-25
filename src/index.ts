@@ -3,7 +3,7 @@ import { exec } from "promisify-child-process";
 import { Logger } from "logover";
 
 const logger = new Logger({
-  level: process.env.LOG_LEVEL || "info",
+  level: process.env["LOG_LEVEL"] || "info",
 });
 
 export class NodeBug {
