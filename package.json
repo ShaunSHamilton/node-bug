@@ -8,8 +8,8 @@
     "@babel/parser": "7.19.6",
     "@babel/types": "7.19.4",
     "@tsconfig/node18-strictest-esm": "1.0.1",
-    "@types/node": "^18.11.5",
-    "babeliser": "0.4.1",
+    "@types/node": "18.11.5",
+    "babeliser": "^0.5.1",
     "tsup": "6.3.0",
     "typescript": "4.8.4"
   },
@@ -18,7 +18,9 @@
   "scripts": {
     "build": "tsup",
     "test": "LOG_LEVEL=debug tsup test/index.ts --format esm --outDir distest  && node distest/index.js",
-    "posttest": "rm -rf distest"
+    "posttest": "rm -rf distest",
+    "prepub": "npm run build",
+    "pub": "npm publish"
   },
   "files": [
     "build"

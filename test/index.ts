@@ -1,35 +1,40 @@
-const codeString = `function test() {
-  let a = 1;
-  a++;
-  for (let i = 0; i < 10; i++) {
-    a++;
-  }
-  somethingToSpyOn(a);
-  console.log(\`a: \${a}\`);
-  return a;
-}
-test();
-`;
-
-import { assertIdentifier, assertVariableDeclaration } from "@babel/types";
+import { readFile } from "fs/promises";
 import { Babeliser } from "babeliser";
 import { NodeBug } from "../src/index.js";
 
-const babelisedCode = new Babeliser(codeString);
-
-const aVariableDeclaration = babelisedCode
-  .getVariableDeclarations()
-  .find((v) => {
-    const identifier = v.declarations?.[0]?.id;
-    assertIdentifier(identifier);
-    return identifier.name === "a";
-  });
-
-assertVariableDeclaration(aVariableDeclaration);
-const { end } = aVariableDeclaration;
+// Get fixture file
+const fixture = await readFile("./fix.js", "utf-8");
+// Babelise code string to get AST
+const babelisedCode = new Babeliser(fixture);
+// Find only the function named "test"
+const testFunction = babelisedCode.getFunctionDeclarations().find((f) => {
+  return f.id?.name === "test";
+});
+assertIs<object>(testFunction, "object");
+// Generate code from just "test" AST
+const testCodeString = babelisedCode.generateCode(testFunction);
+// Add function call to generated code
+const testableCodeString = testCodeString + "\ntest();";
+// Create NodeBug instance
+const nodeBug = new NodeBug(testableCodeString);
+// Get location of end of "test" function
+const { end } = testFunction;
 assertIs<number>(end, "number");
-const nodeBug = new NodeBug(codeString);
-nodeBug.attachDebugger(end, "exec('a')");
+// Define polyfills and/or spies
+const complexApi = (...args: any[]) => args;
+// Get location to place spy
+const spyLoc = 0;
+nodeBug.defineSpy(spyLoc, complexApi);
+// Get location of `a` variable declaration
+const aDeclaration = babelisedCode.getVariableDeclarations().find((v) => {
+  // @ts-ignore
+  return v?.id?.name === "a";
+});
+assertIs<object>(aDeclaration, "object");
+const { end: aEnd } = aDeclaration;
+assertIs<number>(aEnd, "number");
+// Attach debugger after `a` variable declaration
+nodeBug._rawDebug(aEnd, "exec('a')");
 
 // const { start: spyStart } = babelisedCode
 //   .getExpressionStatements()

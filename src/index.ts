@@ -3,7 +3,9 @@ import { exec } from "promisify-child-process";
 import { Logger } from "logover";
 
 const logger = new Logger({
-  level: process.env["LOG_LEVEL"] || "info",
+  level: process.env["LOG_LEVEL"] || process.env["NODE_BUG_LEVEL"] || "error",
+  debug: "",
+  error: "NODE BUG",
 });
 
 export class NodeBug {
@@ -24,10 +26,11 @@ export class NodeBug {
     this._expressions.push(expression);
     return this;
   }
-  defineSpy(location: number, expression: string) {
+  defineSpy(location: number, spy: Function) {
+    const spyString = spy.toString();
     const firstHalf = this._codeString.slice(0, location);
     const secondHalf = this._codeString.slice(location);
-    this._codeString = firstHalf + `\n${expression}\n` + secondHalf;
+    this._codeString = firstHalf + `\n${spyString}\n` + secondHalf;
     return this;
   }
   async inspect() {
@@ -94,6 +97,21 @@ export class NodeBug {
   //     yield expression;
   //   }
   // }
+  /**
+   * Available to give access to inner stdin of the `node inspect` process
+   *
+   * **NOTE:** This is not recommended to use unless you know what you are doing
+   * @param location Location to place debugger
+   * @param expression `node inspect` stdin expression
+   */
+  _rawDebug(location: number, expression: string) {
+    const firstHalf = this._codeString.slice(0, location);
+    const secondHalf = this._codeString.slice(location);
+    this._codeString =
+      firstHalf + '\nconsole.log("--NODE_BUG--");debugger;' + secondHalf;
+    this._expressions.push(expression);
+    return this;
+  }
   async _writeCodeToFile() {
     await writeFile(this._fileName, this._codeString, "utf-8");
   }
